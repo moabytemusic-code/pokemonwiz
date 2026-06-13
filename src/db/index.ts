@@ -1,10 +1,22 @@
-import { createClient } from '@supabase/supabase-js';
+let _supabase: any = null;
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY!;
+function initClient() {
+  const { createClient } = require('@supabase/supabase-js');
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_KEY;
+  if (!url || !key) throw new Error('Supabase env vars not configured');
+  _supabase = createClient(url, key, { auth: { persistSession: false } });
+}
 
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: { persistSession: false },
+// Lazy singleton — only initializes on first access
+export default new Proxy({}, {
+  get(_, prop) {
+    if (!_supabase) initClient();
+    return _supabase[prop];
+  }
 });
 
-export default supabase;
+export async function getSupabase() {
+  if (!_supabase) initClient();
+  return _supabase;
+}

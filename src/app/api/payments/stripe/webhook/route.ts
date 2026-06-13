@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import supabase from '../../../../../db';
 
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+function getStripe() {
+  const Stripe = require('stripe');
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) throw new Error('STRIPE_SECRET_KEY is not set');
+  return new Stripe(key, { apiVersion: '2025-03-31.changelog' });
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -10,6 +15,7 @@ export async function POST(req: NextRequest) {
 
   let event;
   try {
+    const stripe = getStripe();
     event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
   } catch (err: any) {
     return NextResponse.json({ error: `Webhook signature: ${err.message}` }, { status: 400 });
