@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe } from '../../../../../lib/stripe';
+import { getStripe } from '../../../../../lib/stripe';
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Minimum deposit is $1.00' }, { status: 400 });
     }
 
+    const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
@@ -16,7 +17,7 @@ export async function POST(req: NextRequest) {
         price_data: {
           currency: 'usd',
           product_data: { name: 'Pokemon Wiz — Wallet Deposit' },
-          unit_amount: Math.round(amount * 100), // cents
+          unit_amount: Math.round(amount * 100),
         },
         quantity: 1,
       }],
