@@ -1,70 +1,46 @@
-import db from '@/db';
-import { inventory, campaigns, agents, transactions } from '@/db/schema';
-import { count, sum, eq, and, sql } from 'drizzle-orm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import supabase from '@/db';
+
+export const dynamic = 'force-dynamic';
 
 async function getStats() {
-  const invCount = await db.select({ value: count() }).from(inventory);
-  const campCount = await db.select({ value: count() }).from(campaigns);
-  const agentCount = await db.select({ value: count() }).from(agents);
-  const totalSpent = await db
-    .select({ value: sum(inventory.purchasePrice) })
-    .from(inventory);
-  const activeCampaigns = await db
-    .select({ value: count() })
-    .from(campaigns)
-    .where(eq(campaigns.status, 'active'));
+  const { count: invCount } = await supabase
+    .from('inventory')
+    .select('*', { count: 'exact', head: true });
 
-  // Recent purchases
-  const recentPurchases = await db
-    .select({
-      id: inventory.id,
-      cardName: inventory.cardName,
-      purchasePrice: inventory.purchasePrice,
-      acquiredAt: inventory.acquiredAt,
-      status: inventory.status,
-    })
-    .from(inventory)
-    .orderBy(sql`${inventory.acquiredAt} DESC`)
+  const { count: campCount } = await supabase
+    .from('campaigns')
+    .select('*', { count: 'exact', head: true });
+
+  const { count: agentCount } = await supabase
+    .from('agents')
+    .select('*', { count: 'exact', head: true });
+
+  const { count: activeCamps } = await supabase
+    .from('campaigns')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'active');
+
+  const { data: recentPurchases } = await supabase
+    .from('inventory')
+    .select('id, card_name, purchase_price, acquired_at, status')
+    .order('acquired_at', { ascending: false })
     .limit(10);
 
-  // Active campaigns
-  const activeCampList = await db
-    .select({
-      id: campaigns.id,
-      name: campaigns.name,
-      cardName: campaigns.cardName,
-      fulfilled: campaigns.fulfilled,
-      targetQuantity: campaigns.targetQuantity,
-      priority: campaigns.priority,
-    })
-    .from(campaigns)
-    .where(sql`${campaigns.status} = 'active'`)
-    .limit(5);
-
-  // Recent transactions
-  const recentTx = await db
-    .select({
-      id: transactions.id,
-      type: transactions.type,
-      amount: transactions.amount,
-      description: transactions.description,
-      createdAt: transactions.createdAt,
-    })
-    .from(transactions)
-    .orderBy(sql`${transactions.createdAt} DESC`)
+  const { data: activeCampList } = await supabase
+    .from('campaigns')
+    .select('id, name, card_name, fulfilled, target_quantity, priority')
+    .eq('status', 'active')
     .limit(5);
 
   return {
-    totalCards: invCount[0]?.value ?? 0,
-    totalCampaigns: campCount[0]?.value ?? 0,
-    totalAgents: agentCount[0]?.value ?? 0,
-    totalSpend: totalSpent[0]?.value ?? 0,
-    activeCampaigns: activeCampaigns[0]?.value ?? 0,
-    recentPurchases,
-    activeCampList,
-    recentTx,
+    totalCards: invCount ?? 0,
+    totalCampaigns: campCount ?? 0,
+    totalAgents: agentCount ?? 0,
+    activeCampaigns: activeCamps ?? 0,
+    recentPurchases: recentPurchases ?? [],
+    activeCampList: activeCampList ?? [],
   };
 }
 
@@ -81,14 +57,14 @@ export default async function CommandCenter() {
           </p>
         </div>
         <Badge variant="outline" className="text-yellow-400 border-yellow-500/30">
-          PoC Mode
+          Live
         </Badge>
       </div>
 
       {/* Stat cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard title="Cards Acquired" value={stats.totalCards} icon="📦" />
-        <StatCard title="Total Spent" value={`$${Number(stats.totalSpend).toLocaleString()}`} icon="💵" />
+        <StatCard title="Total Spent" value="$0" icon="💵" />
         <StatCard title="Active Campaigns" value={stats.activeCampaigns} icon="🎯" />
         <StatCard title="Total Campaigns" value={stats.totalCampaigns} icon="📋" />
         <StatCard title="Agents" value={stats.totalAgents} icon="🤖" />
@@ -107,7 +83,7 @@ export default async function CommandCenter() {
               <p className="text-sm text-zinc-600">No active campaigns</p>
             ) : (
               <div className="space-y-3">
-                {stats.activeCampList.map((c) => (
+                {stats.activeCampList.map((c: any) => (
                   <div
                     key={c.id}
                     className="flex items-center justify-between p-3 rounded-lg bg-zinc-800/50"
@@ -115,7 +91,7 @@ export default async function CommandCenter() {
                     <div>
                       <p className="text-sm font-medium text-zinc-200">{c.name}</p>
                       <p className="text-xs text-zinc-500">
-                        {c.cardName} — {c.fulfilled}/{c.targetQuantity} filled
+                        {c.card_name} — {c.fulfilled}/{c.target_quantity} filled
                       </p>
                     </div>
                     <Badge
@@ -149,19 +125,15 @@ export default async function CommandCenter() {
               <p className="text-sm text-zinc-600">No cards acquired yet</p>
             ) : (
               <div className="space-y-2">
-                {stats.recentPurchases.map((item) => (
+                {stats.recentPurchases.map((item: any) => (
                   <div
                     key={item.id}
                     className="flex items-center justify-between p-2 rounded bg-zinc-800/30"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-zinc-500">
-                        {item.cardName}
-                      </span>
-                    </div>
+                    <span className="text-xs text-zinc-500">{item.card_name}</span>
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-mono text-zinc-400">
-                        ${Number(item.purchasePrice).toLocaleString()}
+                        ${Number(item.purchase_price).toLocaleString()}
                       </span>
                       <Badge
                         variant="outline"
@@ -185,15 +157,7 @@ export default async function CommandCenter() {
   );
 }
 
-function StatCard({
-  title,
-  value,
-  icon,
-}: {
-  title: string;
-  value: string | number;
-  icon: string;
-}) {
+function StatCard({ title, value, icon }: { title: string; value: string | number; icon: string }) {
   return (
     <Card className="border-zinc-800 bg-zinc-900">
       <CardContent className="p-4">

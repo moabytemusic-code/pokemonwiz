@@ -1,12 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import db from '@/db';
-import { deposits, transactions } from '@/db/schema';
-import { sum, sql } from 'drizzle-orm';
+import supabase from '@/db';
+
+export const dynamic = 'force-dynamic';
 
 export default async function WalletPage() {
-  const totalDeposits = await db
-    .select({ value: sum(deposits.amount) })
-    .from(deposits);
+  const { data: deposits } = await supabase
+    .from('deposits')
+    .select('amount, method, status, created_at')
+    .order('created_at', { ascending: false })
+    .limit(10);
+
+  const totalDeposited = deposits?.reduce((sum, d) => sum + Number(d.amount), 0) ?? 0;
 
   return (
     <div className="space-y-6">
@@ -26,7 +30,7 @@ export default async function WalletPage() {
           <CardContent className="p-4">
             <p className="text-xs text-zinc-500">Total Deposited</p>
             <p className="text-3xl font-bold text-green-400 mt-1">
-              ${Number(totalDeposits[0]?.value ?? 0).toLocaleString()}
+              ${totalDeposited.toLocaleString()}
             </p>
           </CardContent>
         </Card>

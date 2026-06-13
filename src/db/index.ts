@@ -1,11 +1,10 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
-import * as schema from './schema';
+import { createClient } from '@supabase/supabase-js';
 
-const connectionString = process.env.DATABASE_URL!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.SUPABASE_SERVICE_KEY!;
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const postgres = require('postgres');
-const client = postgres(connectionString, { prepare: false });
-export const db = drizzle(client, { schema });
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: { persistSession: false },
+});
 
-export default db;
+export default supabase;
