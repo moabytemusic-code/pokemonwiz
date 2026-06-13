@@ -12,7 +12,14 @@ const NAV_ITEMS = [
   { href: '/admin/agents', label: 'Agents', icon: '🤖' },
   { href: '/admin/inventory', label: 'Inventory', icon: '📦' },
   { href: '/admin/shop', label: 'Shop', icon: '🏪' },
-  { href: '/admin/reports', label: 'Reports', icon: '📈' },
+];
+
+const MASTER_ITEMS = [
+  { href: '/admin/master/audit', label: 'Activity Audit', icon: '📋' },
+  { href: '/admin/master/health', label: 'System Health', icon: '🩺' },
+  { href: '/admin/master/financial', label: 'Financial Audit', icon: '🔍' },
+  { href: '/admin/reports', label: 'Reports & P&L', icon: '📈' },
+  { href: '/admin/master/config', label: 'Configuration', icon: '⚙️' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -38,7 +45,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
             return (
@@ -49,6 +56,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   isActive
                     ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
                     : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+                }`}
+              >
+                <span className="text-base">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+
+          {/* Master Admin Oversight Section */}
+          <div className="pt-4 pb-1">
+            <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-zinc-600">
+              Master Oversight
+            </p>
+          </div>
+          {MASTER_ITEMS.map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                  isActive
+                    ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                    : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800'
                 }`}
               >
                 <span className="text-base">{item.icon}</span>
