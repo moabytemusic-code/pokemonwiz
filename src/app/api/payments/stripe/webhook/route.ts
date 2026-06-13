@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-const supabase = require('/Users/kmtwarrior/projects2026/pokemon-wiz/src/db').default;
+import supabase from '../../../../../db';
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 

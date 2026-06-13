@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-const supabase = require('/Users/kmtwarrior/projects2026/pokemon-wiz/src/db').default;
+import supabase from '../../../../../db';
 
 export async function POST(req: NextRequest) {
   try {

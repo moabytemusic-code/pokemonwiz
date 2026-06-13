@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-const { stripe } = require('/Users/kmtwarrior/projects2026/pokemon-wiz/src/lib/stripe');
+import { stripe } from '../../../../../lib/stripe';
 
 export async function POST(req: NextRequest) {
   try {
