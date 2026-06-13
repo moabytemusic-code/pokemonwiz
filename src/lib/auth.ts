@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 export interface SessionData {
   isLoggedIn: boolean;
   email?: string;
+  role?: 'master' | 'client';
 }
 
 const SESSION_OPTIONS = {
@@ -23,13 +24,22 @@ export async function getSession(): Promise<IronSession<SessionData>> {
   return session;
 }
 
-export async function login(password: string): Promise<boolean> {
-  if (password === process.env.ADMIN_PASSWORD) {
+export async function login(password: string, role?: 'master' | 'client'): Promise<'master' | 'client' | false> {
+  if (password === process.env.ADMIN_PASSWORD && (!role || role === 'master')) {
     const session = await getSession();
     session.isLoggedIn = true;
-    session.email = 'admin@pokemonwiz';
+    session.email = 'master@pokemonwiz';
+    session.role = 'master';
     await session.save();
-    return true;
+    return 'master';
+  }
+  if (password === process.env.CLIENT_PASSWORD && (!role || role === 'client')) {
+    const session = await getSession();
+    session.isLoggedIn = true;
+    session.email = 'client@pokemonwiz';
+    session.role = 'client';
+    await session.save();
+    return 'client';
   }
   return false;
 }

@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 
 const NAV_ITEMS = [
   { href: '/', label: 'Command Center', icon: '📊' },
@@ -25,12 +25,22 @@ const MASTER_ITEMS = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [role, setRole] = useState<'master' | 'client' | null>(null);
+
+  useEffect(() => {
+    fetch('/api/auth/session')
+      .then((r) => r.json())
+      .then((data) => setRole(data.role))
+      .catch(() => setRole(null));
+  }, []);
 
   async function handleLogout() {
     await fetch('/api/auth/login', { method: 'DELETE' });
     router.push('/login');
     router.refresh();
   }
+
+  const isMaster = role === 'master';
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex">
@@ -41,7 +51,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <h1 className="text-xl font-bold text-yellow-400 flex items-center gap-2">
             ⚡ Pokemon Wiz
           </h1>
-          <p className="text-xs text-zinc-500 mt-1">Master Admin</p>
+          <p className={`text-xs mt-1 ${isMaster ? 'text-red-400' : 'text-yellow-500'}`}>
+            {isMaster ? '🔒 Master Admin' : '👤 Client'}
+          </p>
         </div>
 
         {/* Navigation */}
@@ -64,29 +76,33 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             );
           })}
 
-          {/* Master Admin Oversight Section */}
-          <div className="pt-4 pb-1">
-            <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-zinc-600">
-              Master Oversight
-            </p>
-          </div>
-          {MASTER_ITEMS.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                  isActive
-                    ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                    : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800'
-                }`}
-              >
-                <span className="text-base">{item.icon}</span>
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
+          {/* Master Admin Oversight — only visible to master */}
+          {isMaster && (
+            <>
+              <div className="pt-4 pb-1">
+                <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-zinc-600">
+                  Master Oversight
+                </p>
+              </div>
+              {MASTER_ITEMS.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      isActive
+                        ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                        : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800'
+                    }`}
+                  >
+                    <span className="text-base">{item.icon}</span>
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </>
+          )}
         </nav>
 
         {/* Logout */}
@@ -96,7 +112,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             className="w-full justify-start text-zinc-400 hover:text-red-400 hover:bg-red-500/10"
             onClick={handleLogout}
           >
-            🚪 Logout
+            🚪 Logout {isMaster ? '(Master)' : '(Client)'}
           </Button>
         </div>
       </aside>
