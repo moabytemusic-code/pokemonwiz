@@ -9,7 +9,7 @@ function initClient(): SupabaseClient {
   const key = process.env.SUPABASE_SERVICE_KEY;
   if (!url || !key) throw new Error('Supabase env vars not configured');
   _supabase = createClient(url, key, { auth: { persistSession: false } });
-  return _supabase;
+  return _supabase!;
 }
 
 // Lazy Proxy — defers createClient() until first property access at runtime
