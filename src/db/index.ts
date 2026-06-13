@@ -1,13 +1,11 @@
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import Database from 'better-sqlite3';
-import path from 'path';
+import { drizzle } from 'drizzle-orm/postgres-js';
 import * as schema from './schema';
 
-const dbPath = path.join(process.cwd(), 'data', 'pokemon-wiz.db');
-const sqlite = new Database(dbPath);
+const connectionString = process.env.DATABASE_URL!;
 
-sqlite.pragma('journal_mode = WAL');
-sqlite.pragma('foreign_keys = ON');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const postgres = require('postgres');
+const client = postgres(connectionString, { prepare: false });
+export const db = drizzle(client, { schema });
 
-export const db = drizzle(sqlite, { schema });
 export default db;
