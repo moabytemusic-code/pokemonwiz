@@ -68,8 +68,8 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
           </p>
         </div>
         <div className="flex gap-2">
-          <form action={`/api/campaigns/${id}/delete`} method="POST" className="inline">
-            <button type="submit" className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-500/10 cursor-pointer bg-transparent border-none font-inherit">
+          <form action={`/api/campaigns/${id}/delete`} method="POST">
+            <button type="submit" className="text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 px-2 py-1 rounded cursor-pointer">
               🗑️ Delete
             </button>
           </form>
