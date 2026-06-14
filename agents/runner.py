@@ -57,14 +57,17 @@ async def process_campaign(campaign: dict):
     fulfilled = campaign.get("fulfilled") or 0
     sources = (campaign.get("sources") or "tcgplayer,ebay,pokemoncenter").split(",")
 
+    print(f"🎯 Processing campaign #{cid}: '{campaign.get('name')}' target={card_name} max=${max_price}")
+
     if fulfilled >= target_qty:
-        # Mark campaign complete
+        print(f"✅ Campaign #{cid} already completed ({fulfilled}/{target_qty})")
         supabase = get_supabase()
         supabase.table("campaigns").update({"status": "completed"}).eq("id", cid).execute()
         audit_log(None, cid, "campaign_completed", f"Campaign '{campaign['name']}' completed ({fulfilled}/{target_qty})")
         return
 
     agent_ids = get_campaign_agents(cid)
+    print(f"👥 Found {len(agent_ids)} agents assigned to campaign #{cid}")
     if not agent_ids:
         return
 
