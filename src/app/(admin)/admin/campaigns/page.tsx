@@ -6,14 +6,34 @@ import { Button } from '@/components/ui/button';
 
 export const dynamic = 'force-dynamic';
 
-export default async function CampaignsPage() {
+export default async function CampaignsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ deleted?: string; error?: string }>;
+}) {
   const { data: campaigns } = await supabase
     .from('campaigns')
     .select('*')
     .order('created_at', { ascending: false });
 
+  const sp = await searchParams;
+  const deleted = sp.deleted;
+  const error = sp.error;
+
   return (
     <div className="space-y-6">
+      {/* Success/Error banners */}
+      {deleted === 'true' && (
+        <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-sm">
+          ✅ Campaign deleted successfully
+        </div>
+      )}
+      {error && (
+        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+          ❌ {error}
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-zinc-100">🎯 Campaigns</h1>
