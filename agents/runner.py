@@ -107,11 +107,14 @@ async def process_campaign(campaign: dict):
             if not monitor:
                 continue
 
+            print(f"    🌐 Searching {source} for {card_name}...")
             audit_log(agent_id, cid, "scrape_start", f"Searching {source} for {card_name}")
 
             try:
                 listings = await monitor.search_card(card_name, set_name, max_price)
+                print(f"    {'✅' if listings else '❌'} {source}: {len(listings)} listings found")
             except Exception as e:
+                print(f"    ❌ {source} scrape failed: {e}")
                 audit_log(agent_id, cid, "scrape_error", f"{source} scrape failed: {e}", level="error")
                 continue
 
