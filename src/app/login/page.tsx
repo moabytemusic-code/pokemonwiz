@@ -10,7 +10,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [role, setRole] = useState<'master' | 'client'>('master');
+  const [role, setRole] = useState<'master' | 'user'>('user');
   const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -21,11 +21,10 @@ export default function LoginPage() {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password, role }),
+      body: JSON.stringify({ password, role: role === 'master' ? 'master' : 'client' }),
     });
 
     if (res.ok) {
-      const data = await res.json();
       router.push('/');
       router.refresh();
     } else {
@@ -35,77 +34,64 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-950">
-      <Card className="w-full max-w-sm border-zinc-800 bg-zinc-900">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-yellow-400">
-            ⚡ Pokemon Wiz
+    <div className="min-h-screen flex items-center justify-center bg-zinc-950 relative">
+      <Card className="w-full max-w-sm border-zinc-800 bg-zinc-900/80 backdrop-blur-sm">
+        <CardHeader className="text-center pb-4">
+          <div className="text-3xl mb-2">⚡</div>
+          <CardTitle className="text-xl font-bold text-yellow-400 tracking-tight">
+            Pokemon Wiz
           </CardTitle>
-          <CardDescription className="text-zinc-400">
-            Select your role and enter your password
+          <CardDescription className="text-zinc-500 text-xs">
+            Sign in to your account
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Role selector */}
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setRole('master')}
-                className={`flex-1 py-2.5 px-3 rounded-lg text-sm font-medium border transition-colors ${
-                  role === 'master'
-                    ? 'bg-red-500/10 border-red-500/30 text-red-400'
-                    : 'bg-zinc-800 border-zinc-700 text-zinc-500 hover:border-zinc-600'
-                }`}
-              >
-                🔒 Master Admin
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole('client')}
-                className={`flex-1 py-2.5 px-3 rounded-lg text-sm font-medium border transition-colors ${
-                  role === 'client'
-                    ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'
-                    : 'bg-zinc-800 border-zinc-700 text-zinc-500 hover:border-zinc-600'
-                }`}
-              >
-                👤 User
-              </button>
-            </div>
-
             <div>
               <Input
                 type="password"
-                placeholder={role === 'master' ? 'Master admin password' : 'Client password'}
+                placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="bg-zinc-800 border-zinc-700 text-zinc-100"
+                className="bg-zinc-800/80 border-zinc-700 text-zinc-100 h-10 text-sm"
                 autoFocus
               />
             </div>
 
             {error && (
-              <p className="text-sm text-red-400 text-center">{error}</p>
+              <p className="text-xs text-red-400 text-center">{error}</p>
             )}
 
             <Button
               type="submit"
-              className={`w-full font-semibold ${
-                role === 'master'
-                  ? 'bg-red-500 hover:bg-red-600 text-white'
-                  : 'bg-yellow-500 hover:bg-yellow-600 text-black'
-              }`}
+              className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-semibold h-10 text-sm"
               disabled={loading}
             >
-              {loading
-                ? 'Verifying...'
-                : role === 'master'
-                  ? 'Enter Master Command'
-                  : 'Enter Dashboard'}
+              {loading ? 'Signing in...' : 'Sign in'}
             </Button>
           </form>
         </CardContent>
       </Card>
+
+      {/* Master Admin link — subtle, bottom-right */}
+      <button
+        onClick={() => {
+          setRole('master');
+          setError('');
+          // Focus the password input
+          const input = document.querySelector('input[type="password"]') as HTMLInputElement;
+          if (input) {
+            input.placeholder = 'Master admin password';
+            input.focus();
+          }
+        }}
+        className={`fixed bottom-3 right-3 text-[10px] transition-colors ${
+          role === 'master' ? 'text-red-500' : 'text-zinc-700 hover:text-zinc-500'
+        }`}
+        title="Master Admin Login"
+      >
+        🔒 Admin
+      </button>
     </div>
   );
 }
