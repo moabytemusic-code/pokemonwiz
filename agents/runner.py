@@ -168,11 +168,18 @@ async def process_campaign(campaign: dict):
 async def main_loop():
     """Main agent loop — polls for active campaigns every N seconds."""
     Config.validate()
+    print("✅ Config validated")
+    
+    supabase = get_supabase()
+    print("✅ Supabase connected")
+    
     audit_log(None, None, "agent_startup", "Pokemon Wiz Agent Runtime started")
+    print("🚀 Agent Runtime started — polling for campaigns...")
 
     while True:
         try:
             campaigns = get_active_campaigns()
+            print(f"📋 Poll: found {len(campaigns)} active campaigns")
             audit_log(None, None, "poll", f"Found {len(campaigns)} active campaigns")
 
             if campaigns:
@@ -181,11 +188,15 @@ async def main_loop():
                     await process_campaign(campaign)
 
         except Exception as e:
+            print(f"❌ Main loop error: {e}")
             audit_log(None, None, "agent_error", f"Main loop error: {e}", level="error")
 
-        # Wait before next poll
+        print(f"💤 Sleeping for {Config.POLL_INTERVAL}s...")
         await asyncio.sleep(Config.POLL_INTERVAL)
 
 
 if __name__ == "__main__":
+    print("🚀 Pokemon Wiz Agent Runtime starting...")
+    print(f"📡 Supabase URL: {Config.SUPABASE_URL[:30]}...")
+    print(f"⏱  Poll interval: {Config.POLL_INTERVAL}s")
     asyncio.run(main_loop())
