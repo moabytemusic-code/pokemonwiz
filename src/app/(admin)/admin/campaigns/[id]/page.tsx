@@ -67,9 +67,16 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             {campaign.card_number ? ` · #${campaign.card_number}` : ''}
           </p>
         </div>
-        <Link href="/admin/campaigns">
-          <Button variant="ghost" className="text-zinc-400">← Back</Button>
-        </Link>
+        <div className="flex gap-2">
+          <form action={`/api/campaigns/${id}/delete`} method="POST" onSubmit="return confirm('Delete this campaign?')">
+            <Button type="submit" variant="ghost" className="text-red-400 hover:text-red-300 hover:bg-red-500/10 text-xs">
+              🗑️ Delete
+            </Button>
+          </form>
+          <Link href="/admin/campaigns">
+            <Button variant="ghost" className="text-zinc-400">← Back</Button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats + Progress */}
