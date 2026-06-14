@@ -69,7 +69,7 @@ export default function LoginPage() {
                     : 'bg-zinc-800 border-zinc-700 text-zinc-500 hover:border-zinc-600'
                 }`}
               >
-                👤 Client
+                👤 User
               </button>
             </div>
 
