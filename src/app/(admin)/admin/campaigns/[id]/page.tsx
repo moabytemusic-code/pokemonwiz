@@ -22,10 +22,21 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
     .select('agent_id, is_lead, assigned_at')
     .eq('campaign_id', id);
 
+  const assignedIds = assignedAgents?.map((a: any) => a.agent_id) ?? [0];
+
   const { data: agents } = await supabase
     .from('agents')
     .select('id, name, outlet, fund_balance, status')
-    .in('id', assignedAgents?.map((a: any) => a.agent_id) ?? [0]);
+    .in('id', assignedIds);
+
+  // Get unassigned agents for the assignment dropdown
+  const { data: allAgents } = await supabase
+    .from('agents')
+    .select('id, name, outlet, status')
+    .is('is_active', true)
+    .order('name');
+
+  const unassigned = allAgents?.filter((a: any) => !assignedIds.includes(a.id)) ?? [];
 
   const { data: purchases } = await supabase
     .from('inventory')
@@ -56,14 +67,9 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             {campaign.card_number ? ` · #${campaign.card_number}` : ''}
           </p>
         </div>
-        <div className="flex gap-2">
-          <form action={`/api/campaigns/${id}`} method="POST">
-            <input type="hidden" name="_method" value="PATCH" />
-          </form>
-          <Link href="/admin/campaigns">
-            <Button variant="ghost" className="text-zinc-400">← Back</Button>
-          </Link>
-        </div>
+        <Link href="/admin/campaigns">
+          <Button variant="ghost" className="text-zinc-400">← Back</Button>
+        </Link>
       </div>
 
       {/* Stats + Progress */}
@@ -105,13 +111,10 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             <CardTitle className="text-sm font-semibold text-zinc-300">🤖 Assigned Agents</CardTitle>
           </CardHeader>
           <CardContent>
-            {!assignedAgents || assignedAgents.length === 0 ? (
-              <div className="text-center py-6">
-                <p className="text-sm text-zinc-600">No agents assigned yet</p>
-                <p className="text-xs text-zinc-600 mt-1">Agents will be assignable from the Agent management page</p>
-              </div>
+            {(!assignedAgents || assignedAgents.length === 0) ? (
+              <p className="text-sm text-zinc-600 text-center py-4">No agents assigned yet</p>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-2 mb-4">
                 {assignedAgents.map((aa: any) => {
                   const agent = agentMap.get(aa.agent_id);
                   return (
@@ -119,12 +122,32 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-zinc-200">{agent?.name ?? `Agent #${aa.agent_id}`}</span>
                         {aa.is_lead && <Badge variant="outline" className="text-[10px] border-yellow-500/30 text-yellow-400">Lead</Badge>}
+                        <Badge variant="outline" className="text-[10px] border-zinc-600 text-zinc-400">{agent?.outlet ?? '—'}</Badge>
                       </div>
-                      <Badge variant="outline" className="text-[10px] border-zinc-600 text-zinc-400">{agent?.outlet ?? '—'}</Badge>
+                      <form action={`/api/campaign-agents?campaign_id=${id}&agent_id=${aa.agent_id}`} method="POST">
+                        <input type="hidden" name="_method" value="DELETE" />
+                        <button type="submit" className="text-[10px] text-red-400 hover:text-red-300">Remove</button>
+                      </form>
                     </div>
                   );
                 })}
               </div>
+            )}
+
+            {/* Assign agent form */}
+            {unassigned.length > 0 && (
+              <form action={`/api/campaign-agents`} method="POST" className="flex gap-2 pt-2 border-t border-zinc-800">
+                <input type="hidden" name="campaign_id" value={id} />
+                <select name="agent_id" className="flex-1 h-9 rounded-md border border-zinc-700 bg-zinc-800 px-2 text-xs text-zinc-100" required>
+                  <option value="">Select agent...</option>
+                  {unassigned.map((a: any) => (
+                    <option key={a.id} value={a.id}>{a.name} ({a.outlet})</option>
+                  ))}
+                </select>
+                <button type="submit" className="h-9 px-3 rounded-md bg-yellow-500 hover:bg-yellow-600 text-black text-xs font-semibold">
+                  + Assign
+                </button>
+              </form>
             )}
           </CardContent>
         </Card>
@@ -141,10 +164,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
               <div className="space-y-1">
                 {purchases.map((p: any) => (
                   <div key={p.id} className="flex items-center justify-between p-2 rounded text-xs font-mono hover:bg-zinc-800/40">
-                    <div className="flex items-center gap-2">
-                      <span className="text-zinc-300">{p.card_name}</span>
-                      <Badge variant="outline" className="text-[10px] border-zinc-600 text-zinc-400">{p.condition ?? '—'}</Badge>
-                    </div>
+                    <span className="text-zinc-300">{p.card_name}</span>
                     <div className="flex items-center gap-2">
                       <span className="text-zinc-400">${Number(p.purchase_price).toFixed(2)}</span>
                       <Badge variant="outline" className={
