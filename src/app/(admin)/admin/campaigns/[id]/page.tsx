@@ -68,9 +68,11 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
           </p>
         </div>
         <div className="flex gap-2">
-          <a href={`/api/campaigns/${id}/delete`} className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-500/10 no-underline" data-confirm="Delete this campaign?">
-            🗑️ Delete
-          </a>
+          <form action={`/api/campaigns/${id}/delete`} method="POST" className="inline">
+            <button type="submit" className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-500/10 cursor-pointer bg-transparent border-none font-inherit">
+              🗑️ Delete
+            </button>
+          </form>
           <Link href="/admin/campaigns">
             <Button variant="ghost" className="text-zinc-400">← Back</Button>
           </Link>
