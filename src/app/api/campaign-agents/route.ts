@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
       // Remove agent from campaign
       const url = new URL(req.url);
       const campaign_id = parseInt(url.searchParams.get('campaign_id') || formData.get('campaign_id') as string);
-      const agent_id = parseInt(formData.get('agent_id') as string);
+      const agent_id = parseInt(url.searchParams.get('agent_id') || formData.get('agent_id') as string);
 
       if (!campaign_id || !agent_id) {
         return NextResponse.redirect(new URL('/admin/campaigns', req.url));
