@@ -1,16 +1,13 @@
 """
-TCGPlayer monitor — searches TCGPlayer for card listings.
-Uses httpx for HTTP + BeautifulSoup for parsing.
+TCGPlayer monitor — uses the TCGPlayer public search API for reliable results.
 """
 
-import re
 import httpx
-from bs4 import BeautifulSoup
 from monitors.base import BaseMonitor, CardListing
 
 
 class TCGPlayerMonitor(BaseMonitor):
-    """Searches TCGPlayer marketplace for Pokemon cards."""
+    """Searches TCGPlayer marketplace via their public API."""
 
     @property
     def outlet_name(self) -> str:
@@ -24,63 +21,66 @@ class TCGPlayerMonitor(BaseMonitor):
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                           "AppleWebKit/537.36 (KHTML, like Gecko) "
                           "Chrome/125.0.0.0 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml",
+            "Accept": "application/json",
         }
 
-        # Build search URL
-        query = card_name.replace(" ", "+")
-        url = f"https://www.tcgplayer.com/search/pokemon/product?q={query}&view=grid"
-
+        # TCGPlayer search API endpoint
+        params = {
+            "q": card_name,
+            "productLineName": "pokemon",
+            "limit": 30,
+            "sort": "price+asc",
+            "condition": "Near+Mint,Mint",
+        }
         if set_name:
-            set_slug = set_name.lower().replace(" ", "-")
-            url += f"&setName={set_slug}"
+            params["setName"] = set_name
+
+        url = "https://mp-search-api.tcgplayer.com/v1/search/request"
 
         try:
             async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
-                resp = await client.get(url, headers=headers)
+                payload = {
+                    "searchTerm": card_name,
+                    "filters": [],
+                    "sort": "PRICE_LOW_TO_HIGH",
+                    "resultsStartingIndex": 0,
+                    "resultsPerPage": 50,
+                }
+                resp = await client.post(
+                    "https://mp-search-api.tcgplayer.com/v1/search/request?q=" + card_name.replace(" ", "+"),
+                    json=payload,
+                    headers=headers,
+                )
                 if resp.status_code != 200:
                     return results
 
-                soup = BeautifulSoup(resp.text, "lxml")
+                data = resp.json()
+                results_list = data.get("results", [])
 
-                # TCGPlayer product cards
-                for item in soup.select("div[class*='search-result']"):
+                for item in results_list:
                     try:
-                        name_el = item.select_one("a[class*='product-card__title']")
-                        price_el = item.select_one("span[class*='price']")
-                        link_el = item.select_one("a[class*='product-card']")
+                        product = item.get("product", {})
+                        market_price = product.get("marketPrice") or product.get("lowestPrice") or 0
+                        product_name = product.get("productName", card_name)
+                        url_key = product.get("urlName", "")
+                        product_id = str(product.get("productId", ""))
 
-                        if not name_el or not price_el:
-                            continue
-
-                        found_name = name_el.get_text(strip=True)
-                        price_text = price_el.get_text(strip=True).replace("$", "").replace(",", "")
-                        href = link_el.get("href", "") if link_el else ""
-
-                        try:
-                            price = float(price_text)
-                        except ValueError:
-                            continue
-
+                        price = float(market_price)
                         if max_price and price > max_price:
                             continue
 
-                        # Extract listing ID from URL
-                        listing_id = href.split("/")[-1] if href else found_name
-
                         results.append(CardListing(
-                            card_name=found_name,
-                            set_name=set_name,
+                            card_name=product_name,
+                            set_name=set_name or product.get("setName"),
                             outlet="tcgplayer",
                             price=price,
-                            listing_url=f"https://www.tcgplayer.com{href}" if href else url,
-                            listing_id=listing_id,
+                            listing_url=f"https://www.tcgplayer.com/product/{product_id}",
+                            listing_id=product_id,
                         ))
                     except Exception:
                         continue
 
-        except Exception as e:
-            # Log but don't crash
+        except Exception:
             pass
 
         return results
