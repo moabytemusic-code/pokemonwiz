@@ -22,6 +22,20 @@ const MASTER_ITEMS = [
   { href: '/admin/master/config', label: 'Configuration', icon: '⚙️' },
 ];
 
+const SOURCES = [
+  { label: 'TCGPlayer', status: 'connected' as const },
+  { label: 'eBay', status: 'pending' as const },
+  { label: 'Pokemon Center', status: 'connected' as const },
+  { label: 'Amazon', status: 'connected' as const },
+  { label: 'WhatNot', status: 'connected' as const },
+];
+
+const STATUS_COLORS = {
+  connected: 'bg-green-500',
+  pending: 'bg-yellow-500',
+  error: 'bg-red-500',
+};
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -75,6 +89,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </Link>
             );
           })}
+
+          {/* Sources being monitored */}
+          <div className="pt-4 pb-1">
+            <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-zinc-600">
+              Monitored Sources
+            </p>
+          </div>
+          {SOURCES.map((s) => (
+            <div
+              key={s.label}
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-zinc-500"
+            >
+              <span className={`w-2 h-2 rounded-full shrink-0 ${STATUS_COLORS[s.status]}`} />
+              <span>{s.label}</span>
+              <span className="text-[10px] text-zinc-600 ml-auto">
+                {s.status === 'connected' ? 'Live' : s.status === 'pending' ? 'API Key' : 'Error'}
+              </span>
+            </div>
+          ))}
 
           {/* Master Admin Oversight — only visible to master */}
           {isMaster && (
