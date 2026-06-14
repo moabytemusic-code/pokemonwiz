@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       target_quantity: body.target_quantity || 10,
       priority: body.priority || 'normal',
       status: 'active',
-      sources: body.sources || 'tcgplayer,pokemoncenter,ebay',
+      sources: 'tcgplayer,pokemoncenter,ebay,amazon,whatnot',
       notes: body.notes || null,
     })
     .select()

@@ -15,6 +15,8 @@ from core.heartbeat import heartbeat
 from monitors.tcgplayer import TCGPlayerMonitor
 from monitors.ebay import EbayMonitor
 from monitors.pokemoncenter import PokemonCenterMonitor
+from monitors.amazon import AmazonMonitor
+from monitors.whatnot import WhatNotMonitor
 from buyers.buyer import BuyAgent
 
 
@@ -23,6 +25,8 @@ MONITORS = {
     "tcgplayer": TCGPlayerMonitor(),
     "ebay": EbayMonitor(),
     "pokemoncenter": PokemonCenterMonitor(),
+    "amazon": AmazonMonitor(),
+    "whatnot": WhatNotMonitor(),
 }
 
 
@@ -55,7 +59,7 @@ async def process_campaign(campaign: dict):
     max_price = float(campaign["max_price"]) if campaign.get("max_price") else None
     target_qty = campaign.get("target_quantity") or 10
     fulfilled = campaign.get("fulfilled") or 0
-    sources = (campaign.get("sources") or "tcgplayer,ebay,pokemoncenter").split(",")
+    sources = (campaign.get("sources") or "tcgplayer,ebay,pokemoncenter,amazon,whatnot").split(",")
 
     print(f"🎯 Processing campaign #{cid}: '{campaign.get('name')}' target={card_name} max=${max_price}")
 

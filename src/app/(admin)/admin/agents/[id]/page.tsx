@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import AgentCredentialsForm from '@/components/agents/CredentialsForm';
 
 export const dynamic = 'force-dynamic';
 
@@ -100,6 +101,9 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
           </form>
         </CardContent>
       </Card>
+
+      {/* Credentials */}
+      <AgentCredentialsForm agentId={parseInt(id)} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Campaign Assignments */}
