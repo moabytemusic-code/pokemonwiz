@@ -30,11 +30,18 @@ export default async function WalletPage() {
           <h1 className="text-2xl font-bold text-zinc-100">💰 Wallet</h1>
           <p className="text-sm text-zinc-500 mt-1">Main balance, deposits, and funding</p>
         </div>
-        <Link href="/admin/wallet/deposit">
-          <Button className="bg-green-500 hover:bg-green-600 text-white font-semibold">
-            + Deposit Funds
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <form action="/api/wallet/test-funds" method="POST">
+            <Button type="submit" variant="outline" className="border-green-500/30 text-green-400 text-xs">
+              🧪 Add $1,000 Test
+            </Button>
+          </form>
+          <Link href="/admin/wallet/deposit">
+            <Button className="bg-green-500 hover:bg-green-600 text-white font-semibold">
+              + Deposit Funds
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Balance cards */}
