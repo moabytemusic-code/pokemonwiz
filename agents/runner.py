@@ -75,12 +75,22 @@ async def process_campaign(campaign: dict):
 
     for agent_id in agent_ids:
         agent = get_agent(agent_id)
-        if not agent or agent.get("status") in ("paused", "error", "banned"):
+        agent_name = agent.get("name", f"#{agent_id}") if agent else f"#{agent_id}"
+        if not agent:
+            print(f"  ⏭️ Agent #{agent_id}: not found")
+            continue
+        if agent.get("status") in ("paused", "error", "banned"):
+            print(f"  ⏭️ {agent_name}: status={agent['status']}")
+            audit_log(agent_id, cid, "agent_skipped", f"Agent {agent_name} status={agent['status']}")
             continue
 
         balance = float(agent.get("fund_balance") or 0)
         if balance <= 0:
+            print(f"  ⏭️ {agent_name}: $0 balance — skipping")
+            audit_log(agent_id, cid, "agent_skipped", f"Agent {agent_name} has $0 balance")
             continue
+
+        print(f"  🔍 {agent_name}: searching ${balance:.2f} balance")
 
         # Check 2-per-account limit
         supabase = get_supabase()
