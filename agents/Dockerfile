@@ -34,5 +34,5 @@ RUN playwright install-deps chromium
 # Copy agent code
 COPY agents/ .
 
-# Run the agent runner
-CMD ["python", "-m", "runner"]
+# Run the agent runner with unbuffered output
+CMD ["python", "-u", "-m", "runner"]
